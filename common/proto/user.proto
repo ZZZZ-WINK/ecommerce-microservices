@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "user-service/common/proto";
+
+// 用户服务的gRPC接口定义
+service UserService {
+  // 用户注册
+  rpc Register (RegisterRequest) returns (RegisterResponse);
+  // 用户登录
+  rpc Login (LoginRequest) returns (LoginResponse);
+  // 查询用户信息
+  rpc GetUserInfo (UserInfoRequest) returns (UserInfoResponse);
+}
+
+// 注册请求参数
+message RegisterRequest {
+  string username = 1; // 用户名
+  string password = 2; // 密码
+  string email = 3;    // 邮箱
+}
+
+// 注册响应
+message RegisterResponse {
+  int64 user_id = 1;   // 用户ID
+  string message = 2;  // 返回信息
+}
+
+// 登录请求参数
+message LoginRequest {
+  string username = 1; // 用户名
+  string password = 2; // 密码
+}
+
+// 登录响应
+message LoginResponse {
+  int64 user_id = 1;
+  string token = 2;
+  string message = 3;
+}
+
+// 查询用户信息请求
+message UserInfoRequest {
+  int64 user_id = 1;   // 用户ID
+}
+
+// 查询用户信息响应
+message UserInfoResponse {
+  int64 user_id = 1;
+  string username = 2;
+  string email = 3;
+  string message = 4;
+} 
