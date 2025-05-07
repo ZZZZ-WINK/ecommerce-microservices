@@ -1,10 +1,11 @@
 package service
 
 import (
+	pb "common/proto/gen/user"
 	"context"
 	"errors"
-	pb "user-service/common/proto"
 	"user-service/model"
+	"user-service/service/jwt"
 
 	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/grpc/codes"
@@ -65,8 +66,11 @@ func (s *UserService) Login(ctx context.Context, req *pb.LoginRequest) (*pb.Logi
 		return nil, status.Error(codes.Unauthenticated, "invalid password")
 	}
 
-	// TODO: 生成 JWT token
-	token := "dummy-token"
+	// 生成JWT token
+	token, err := jwt.GenerateToken(int64(user.ID), user.Username)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "failed to generate token")
+	}
 
 	return &pb.LoginResponse{
 		UserId:  int64(user.ID),

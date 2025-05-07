@@ -4,7 +4,7 @@ import (
 	"log"
 	"net"
 
-	pb "user-service/common/proto"
+	pb "common/proto/gen/user"
 	"user-service/model"
 	"user-service/service"
 
