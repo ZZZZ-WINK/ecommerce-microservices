@@ -25,6 +25,9 @@ func main() {
 		log.Fatalf("failed to migrate database: %v", err)
 	}
 
+	// 初始化 Redis
+	service.InitRedis()
+
 	lis, err := net.Listen("tcp", ":50052")
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)

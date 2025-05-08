@@ -3,8 +3,11 @@ package service
 import (
 	pb "common/proto/gen/product"
 	"context"
+	"encoding/json"
+	"fmt"
 	"product-service/model"
 	"strings"
+	"time"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -38,6 +41,17 @@ func (s *ProductService) CreateProduct(ctx context.Context, req *pb.CreateProduc
 }
 
 func (s *ProductService) GetProduct(ctx context.Context, req *pb.GetProductRequest) (*pb.GetProductResponse, error) {
+	// 1. 先查 Redis
+	cacheKey := fmt.Sprintf("product:detail:%d", req.ProductId)
+	val, err := RedisClient.Get(Ctx, cacheKey).Result()
+	if err == nil && val != "" {
+		var cachedProduct pb.Product
+		if json.Unmarshal([]byte(val), &cachedProduct) == nil {
+			return &pb.GetProductResponse{Product: &cachedProduct}, nil
+		}
+	}
+
+	// 2. 查数据库
 	var product model.Product
 	if err := s.db.First(&product, req.ProductId).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -45,19 +59,35 @@ func (s *ProductService) GetProduct(ctx context.Context, req *pb.GetProductReque
 		}
 		return nil, status.Error(codes.Internal, "failed to query product")
 	}
-	return &pb.GetProductResponse{
-		Product: &pb.Product{
-			Id:          int64(product.ID),
-			Name:        product.Name,
-			Description: product.Description,
-			Price:       product.Price,
-			Stock:       int32(product.Stock),
-			MainImage:   product.MainImage,
-		},
-	}, nil
+
+	// 3. 写入 Redis
+	pbProduct := &pb.Product{
+		Id:          int64(product.ID),
+		Name:        product.Name,
+		Description: product.Description,
+		Price:       product.Price,
+		Stock:       int32(product.Stock),
+		MainImage:   product.MainImage,
+	}
+	bytes, _ := json.Marshal(pbProduct)
+	RedisClient.Set(Ctx, cacheKey, bytes, 5*time.Minute)
+
+	return &pb.GetProductResponse{Product: pbProduct}, nil
 }
 
 func (s *ProductService) ListProducts(ctx context.Context, req *pb.ListProductsRequest) (*pb.ListProductsResponse, error) {
+	// 只缓存无关键词、第一页的商品列表
+	cacheKey := "product:list:page:1:size:10"
+	if strings.TrimSpace(req.Keyword) == "" && (req.Page == 1 || req.Page == 0) && (req.PageSize == 10 || req.PageSize == 0) {
+		val, err := RedisClient.Get(Ctx, cacheKey).Result()
+		if err == nil && val != "" {
+			var cachedResp pb.ListProductsResponse
+			if json.Unmarshal([]byte(val), &cachedResp) == nil {
+				return &cachedResp, nil
+			}
+		}
+	}
+
 	var products []model.Product
 	var total int64
 	page := int(req.Page)
@@ -91,10 +121,16 @@ func (s *ProductService) ListProducts(ctx context.Context, req *pb.ListProductsR
 			MainImage:   p.MainImage,
 		})
 	}
-	return &pb.ListProductsResponse{
+	resp := &pb.ListProductsResponse{
 		Products: pbProducts,
 		Total:    int32(total),
-	}, nil
+	}
+	// 写入缓存
+	if strings.TrimSpace(req.Keyword) == "" && page == 1 && pageSize == 10 {
+		bytes, _ := json.Marshal(resp)
+		RedisClient.Set(Ctx, cacheKey, bytes, 2*time.Minute)
+	}
+	return resp, nil
 }
 
 func (s *ProductService) UpdateProduct(ctx context.Context, req *pb.UpdateProductRequest) (*pb.UpdateProductResponse, error) {
