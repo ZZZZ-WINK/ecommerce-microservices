@@ -7,6 +7,8 @@ import (
 	"order-service/model"
 	"time"
 
+	"fmt"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
@@ -23,6 +25,16 @@ func NewOrderService(db *gorm.DB, productClient pbProduct.ProductServiceClient) 
 }
 
 func (s *OrderService) CreateOrder(ctx context.Context, req *pb.CreateOrderRequest) (*pb.CreateOrderResponse, error) {
+	// 1. 对每个商品加锁
+	for _, item := range req.Items {
+		lockKey := fmt.Sprintf("lock:product:%d", item.ProductId)
+		ok, err := RedisClient.SetNX(Ctx, lockKey, "locked", 5*time.Second).Result()
+		if err != nil || !ok {
+			return nil, status.Error(codes.Aborted, "order is too frequent, please try again later")
+		}
+		defer RedisClient.Del(Ctx, lockKey) // 下单结束后自动释放锁
+	}
+
 	// 1. 检查库存，调用商品服务
 	for _, item := range req.Items {
 		resp, err := s.productClient.GetProduct(ctx, &pbProduct.GetProductRequest{ProductId: item.ProductId})

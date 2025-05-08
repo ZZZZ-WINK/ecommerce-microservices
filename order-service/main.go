@@ -34,6 +34,8 @@ func main() {
 	defer productConn.Close()
 	productClient := pbProduct.NewProductServiceClient(productConn)
 
+	service.InitRedis()
+
 	lis, err := net.Listen("tcp", ":50053")
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
