@@ -12,6 +12,12 @@ service UserService {
   rpc Login (LoginRequest) returns (LoginResponse);
   // 查询用户信息
   rpc GetUserInfo (UserInfoRequest) returns (UserInfoResponse);
+  // 更新用户信息
+  rpc UpdateUser (UpdateUserRequest) returns (UpdateUserResponse);
+  // 删除用户
+  rpc DeleteUser (DeleteUserRequest) returns (DeleteUserResponse);
+  // 查询用户列表
+  rpc ListUsers (ListUsersRequest) returns (ListUsersResponse);
 }
 
 // 注册请求参数
@@ -51,4 +57,51 @@ message UserInfoResponse {
   string username = 2;
   string email = 3;
   string message = 4;
+}
+
+// 更新用户信息请求
+message UpdateUserRequest {
+  int64 user_id = 1;   // 用户ID
+  string username = 2; // 用户名（可选）
+  string email = 3;    // 邮箱（可选）
+  string password = 4; // 密码（可选）
+}
+
+// 更新用户信息响应
+message UpdateUserResponse {
+  bool success = 1;    // 是否成功
+  string message = 2;  // 返回信息
+}
+
+// 删除用户请求
+message DeleteUserRequest {
+  int64 user_id = 1;   // 用户ID
+}
+
+// 删除用户响应
+message DeleteUserResponse {
+  bool success = 1;    // 是否成功
+  string message = 2;  // 返回信息
+}
+
+// 查询用户列表请求
+message ListUsersRequest {
+  int32 page = 1;      // 页码
+  int32 page_size = 2; // 每页数量
+}
+
+// 查询用户列表响应
+message ListUsersResponse {
+  repeated UserInfo users = 1;  // 用户列表
+  int32 total = 2;             // 总数
+  string message = 3;          // 返回信息
+}
+
+// 用户信息
+message UserInfo {
+  int64 user_id = 1;
+  string username = 2;
+  string email = 3;
+  string created_at = 4;  // 创建时间
+  string updated_at = 5;  // 更新时间
 } 

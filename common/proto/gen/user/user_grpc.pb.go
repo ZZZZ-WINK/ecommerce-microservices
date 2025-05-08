@@ -28,6 +28,12 @@ type UserServiceClient interface {
 	Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error)
 	// 查询用户信息
 	GetUserInfo(ctx context.Context, in *UserInfoRequest, opts ...grpc.CallOption) (*UserInfoResponse, error)
+	// 更新用户信息
+	UpdateUser(ctx context.Context, in *UpdateUserRequest, opts ...grpc.CallOption) (*UpdateUserResponse, error)
+	// 删除用户
+	DeleteUser(ctx context.Context, in *DeleteUserRequest, opts ...grpc.CallOption) (*DeleteUserResponse, error)
+	// 查询用户列表
+	ListUsers(ctx context.Context, in *ListUsersRequest, opts ...grpc.CallOption) (*ListUsersResponse, error)
 }
 
 type userServiceClient struct {
@@ -65,6 +71,33 @@ func (c *userServiceClient) GetUserInfo(ctx context.Context, in *UserInfoRequest
 	return out, nil
 }
 
+func (c *userServiceClient) UpdateUser(ctx context.Context, in *UpdateUserRequest, opts ...grpc.CallOption) (*UpdateUserResponse, error) {
+	out := new(UpdateUserResponse)
+	err := c.cc.Invoke(ctx, "/proto.UserService/UpdateUser", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) DeleteUser(ctx context.Context, in *DeleteUserRequest, opts ...grpc.CallOption) (*DeleteUserResponse, error) {
+	out := new(DeleteUserResponse)
+	err := c.cc.Invoke(ctx, "/proto.UserService/DeleteUser", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) ListUsers(ctx context.Context, in *ListUsersRequest, opts ...grpc.CallOption) (*ListUsersResponse, error) {
+	out := new(ListUsersResponse)
+	err := c.cc.Invoke(ctx, "/proto.UserService/ListUsers", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserServiceServer is the server API for UserService service.
 // All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility
@@ -75,6 +108,12 @@ type UserServiceServer interface {
 	Login(context.Context, *LoginRequest) (*LoginResponse, error)
 	// 查询用户信息
 	GetUserInfo(context.Context, *UserInfoRequest) (*UserInfoResponse, error)
+	// 更新用户信息
+	UpdateUser(context.Context, *UpdateUserRequest) (*UpdateUserResponse, error)
+	// 删除用户
+	DeleteUser(context.Context, *DeleteUserRequest) (*DeleteUserResponse, error)
+	// 查询用户列表
+	ListUsers(context.Context, *ListUsersRequest) (*ListUsersResponse, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -90,6 +129,15 @@ func (UnimplementedUserServiceServer) Login(context.Context, *LoginRequest) (*Lo
 }
 func (UnimplementedUserServiceServer) GetUserInfo(context.Context, *UserInfoRequest) (*UserInfoResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserInfo not implemented")
+}
+func (UnimplementedUserServiceServer) UpdateUser(context.Context, *UpdateUserRequest) (*UpdateUserResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateUser not implemented")
+}
+func (UnimplementedUserServiceServer) DeleteUser(context.Context, *DeleteUserRequest) (*DeleteUserResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteUser not implemented")
+}
+func (UnimplementedUserServiceServer) ListUsers(context.Context, *ListUsersRequest) (*ListUsersResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListUsers not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 
@@ -158,6 +206,60 @@ func _UserService_GetUserInfo_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserService_UpdateUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateUserRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).UpdateUser(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.UserService/UpdateUser",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).UpdateUser(ctx, req.(*UpdateUserRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_DeleteUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteUserRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).DeleteUser(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.UserService/DeleteUser",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).DeleteUser(ctx, req.(*DeleteUserRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_ListUsers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListUsersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).ListUsers(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.UserService/ListUsers",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).ListUsers(ctx, req.(*ListUsersRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // UserService_ServiceDesc is the grpc.ServiceDesc for UserService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -176,6 +278,18 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetUserInfo",
 			Handler:    _UserService_GetUserInfo_Handler,
+		},
+		{
+			MethodName: "UpdateUser",
+			Handler:    _UserService_UpdateUser_Handler,
+		},
+		{
+			MethodName: "DeleteUser",
+			Handler:    _UserService_DeleteUser_Handler,
+		},
+		{
+			MethodName: "ListUsers",
+			Handler:    _UserService_ListUsers_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

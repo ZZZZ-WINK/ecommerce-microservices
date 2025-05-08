@@ -1,25 +1,46 @@
 @echo off
-echo 正在生成proto文件...
+echo Generating proto files...
 
-:: 检查protoc是否安装
+:: Check if protoc is installed
 where protoc >nul 2>nul
 if %errorlevel% neq 0 (
-    echo 错误: 未找到protoc，请先安装protoc
+    echo Error: protoc not found. Please install protoc first.
     exit /b 1
 )
 
-:: 检查go是否安装
+:: Check if go is installed
 where go >nul 2>nul
 if %errorlevel% neq 0 (
-    echo 错误: 未找到go，请先安装go
+    echo Error: go not found. Please install Go first.
     exit /b 1
 )
 
-:: 安装必要的go插件
+:: Install required go plugins
 go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28
 go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
 
-:: 运行生成脚本
-go run generate.go
+:: Parse command line arguments
+set SERVICE=
+set CLEAN=
 
-echo 生成完成！ 
+:parse_args
+if "%~1"=="" goto :run
+if /i "%~1"=="-service" (
+    set SERVICE=-service=%~2
+    shift
+    shift
+    goto :parse_args
+)
+if /i "%~1"=="-clean" (
+    set CLEAN=-clean
+    shift
+    goto :parse_args
+)
+shift
+goto :parse_args
+
+:run
+:: Run generate script
+go run generate.go %SERVICE% %CLEAN%
+
+echo Generation completed! 
