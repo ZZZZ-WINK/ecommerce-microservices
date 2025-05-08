@@ -12,6 +12,10 @@ service UserService {
   rpc Login (LoginRequest) returns (LoginResponse);
   // 查询用户信息
   rpc GetUserInfo (UserInfoRequest) returns (UserInfoResponse);
+  // 更新用户信息
+  rpc UpdateUser (UpdateUserRequest) returns (UpdateUserResponse);
+  // 删除用户
+  rpc DeleteUser (DeleteUserRequest) returns (DeleteUserResponse);
 }
 
 // 注册请求参数
@@ -51,4 +55,26 @@ message UserInfoResponse {
   string username = 2;
   string email = 3;
   string message = 4;
+}
+
+// 更新用户信息请求
+message UpdateUserRequest {
+  int64 user_id = 1;   // 用户ID
+  string email = 2;    // 新邮箱（可选）
+  string password = 3; // 新密码（可选）
+}
+
+// 更新用户信息响应
+message UpdateUserResponse {
+  string message = 1;  // 返回信息
+}
+
+// 删除用户请求
+message DeleteUserRequest {
+  int64 user_id = 1;   // 用户ID
+}
+
+// 删除用户响应
+message DeleteUserResponse {
+  string message = 1;  // 返回信息
 } 
