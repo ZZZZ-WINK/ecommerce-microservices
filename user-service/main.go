@@ -1,12 +1,13 @@
 package main
 
 import (
+	"common/middleware"
 	"log"
 	"net"
-
-	pb "common/proto/gen/user"
 	"user-service/model"
 	"user-service/service"
+
+	pb "common/proto/gen/user"
 
 	"google.golang.org/grpc"
 	"gorm.io/driver/mysql"
@@ -32,7 +33,10 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	s := grpc.NewServer()
+	// 创建带有 JWT 中间件的 gRPC 服务器
+	s := grpc.NewServer(
+		grpc.UnaryInterceptor(middleware.JWTMiddleware),
+	)
 	userService := service.NewUserService(db)
 	pb.RegisterUserServiceServer(s, userService)
 

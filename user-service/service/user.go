@@ -1,11 +1,11 @@
 package service
 
 import (
+	"common/middleware"
 	pb "common/proto/gen/user"
 	"context"
 	"errors"
 	"user-service/model"
-	"user-service/service/jwt"
 
 	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/grpc/codes"
@@ -67,7 +67,7 @@ func (s *UserService) Login(ctx context.Context, req *pb.LoginRequest) (*pb.Logi
 	}
 
 	// 生成JWT token
-	token, err := jwt.GenerateToken(int64(user.ID), user.Username)
+	token, err := middleware.GenerateToken(int64(user.ID), user.Username)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "failed to generate token")
 	}

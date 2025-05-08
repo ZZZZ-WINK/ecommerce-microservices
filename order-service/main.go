@@ -1,6 +1,7 @@
 package main
 
 import (
+	"common/middleware"
 	"log"
 	"net"
 	"order-service/model"
@@ -38,7 +39,10 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	s := grpc.NewServer()
+	// 创建带有 JWT 中间件的 gRPC 服务器
+	s := grpc.NewServer(
+		grpc.UnaryInterceptor(middleware.JWTMiddleware),
+	)
 	orderService := service.NewOrderService(db, productClient)
 	pb.RegisterOrderServiceServer(s, orderService)
 

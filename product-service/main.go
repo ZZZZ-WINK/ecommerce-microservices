@@ -1,6 +1,7 @@
 package main
 
 import (
+	"common/middleware"
 	"log"
 	"net"
 	"product-service/model"
@@ -29,7 +30,9 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	s := grpc.NewServer()
+	s := grpc.NewServer(
+		grpc.UnaryInterceptor(middleware.JWTMiddleware),
+	)
 	productService := service.NewProductService(db)
 	pb.RegisterProductServiceServer(s, productService)
 
