@@ -16,7 +16,7 @@ import (
 )
 
 func main() {
-	dsn := "root:123mysql@tcp(127.0.0.1:3306)/ecommerce?charset=utf8mb4&parseTime=True&loc=Local"
+	dsn := "zli:123456@tcp(192.168.94.242:3306)/ecommerce?charset=utf8mb4&parseTime=True&loc=Local"
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("failed to connect database: %v", err)
@@ -35,6 +35,11 @@ func main() {
 	productClient := pbProduct.NewProductServiceClient(productConn)
 
 	service.InitRedis()
+
+	// 初始化 Kafka 生产者
+	service.InitKafkaProducer([]string{"localhost:9092"}, "order-events")
+	// 启动 Kafka 消费者
+	service.StartKafkaConsumer([]string{"localhost:9092"}, "order-events")
 
 	lis, err := net.Listen("tcp", ":50053")
 	if err != nil {

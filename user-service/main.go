@@ -16,7 +16,7 @@ import (
 
 func main() {
 	// 连接数据库
-	dsn := "root:123mysql@tcp(127.0.0.1:3306)/ecommerce?charset=utf8mb4&parseTime=True&loc=Local"
+	dsn := "zli:123456@tcp(192.168.94.242:3306)/ecommerce?charset=utf8mb4&parseTime=True&loc=Local"
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("failed to connect database: %v", err)

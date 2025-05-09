@@ -67,6 +67,13 @@ func (s *OrderService) CreateOrder(ctx context.Context, req *pb.CreateOrderReque
 	if err := s.db.Create(&order).Error; err != nil {
 		return nil, status.Error(codes.Internal, "failed to create order")
 	}
+
+	// 发送 Kafka 消息
+	msg := fmt.Sprintf("order_created|order_id=%d|user_id=%d", order.ID, order.UserID)
+	err := SendOrderMessage(msg)
+	if err != nil {
+		fmt.Println("Failed to send Kafka message:", err)
+	}
 	return &pb.CreateOrderResponse{
 		OrderId: int64(order.ID),
 		Message: "order created successfully",
