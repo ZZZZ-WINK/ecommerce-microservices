@@ -3,6 +3,7 @@ package middleware
 import (
 	"context"
 	"errors"
+	"os"
 	"strings"
 	"time"
 
@@ -18,8 +19,16 @@ var (
 	ErrExpiredToken = errors.New("token has expired")
 )
 
-// JWTSecret 密钥，实际应用中应该从配置文件或环境变量中读取
-var JWTSecret = []byte("your-secret-key")
+// JWTSecret 密钥，从环境变量中读取
+var JWTSecret = []byte(getEnvOrDefault("JWT_SECRET", "your-secret-key"))
+
+// getEnvOrDefault 从环境变量获取值，如果不存在则返回默认值
+func getEnvOrDefault(key, defaultValue string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return defaultValue
+}
 
 // Claims 定义JWT的声明结构
 type Claims struct {

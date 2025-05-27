@@ -1,4 +1,4 @@
-module common
+module github.com/ZZZZ-WINK/ecommerce-microservices/common
 
 go 1.23
 
