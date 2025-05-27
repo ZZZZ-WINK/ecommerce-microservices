@@ -2,20 +2,34 @@ package main
 
 import (
 	"common/middleware"
+	"fmt"
 	"log"
 	"net"
+	"os"
 	"product-service/model"
 	"product-service/service"
 
 	pb "common/proto/gen/product"
 
+	"github.com/joho/godotenv"
 	"google.golang.org/grpc"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
 
+func init() {
+	_ = godotenv.Load()
+}
+
 func main() {
-	dsn := "zli:123456@tcp(192.168.94.242:3306)/ecommerce?charset=utf8mb4&parseTime=True&loc=Local"
+	// 连接数据库
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
+		os.Getenv("DB_USER"),
+		os.Getenv("DB_PASSWORD"),
+		os.Getenv("DB_HOST"),
+		os.Getenv("DB_PORT"),
+		os.Getenv("DB_NAME"),
+	)
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("failed to connect database: %v", err)
@@ -26,9 +40,15 @@ func main() {
 	}
 
 	// 初始化 Redis
-	service.InitRedis()
+	redisAddr := fmt.Sprintf("%s:%s",
+		os.Getenv("REDIS_HOST"),
+		os.Getenv("REDIS_PORT"),
+	)
+	service.InitRedis(redisAddr)
 
-	lis, err := net.Listen("tcp", ":50052")
+	// 创建 gRPC 服务器
+	port := os.Getenv("GRPC_PORT")
+	lis, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}

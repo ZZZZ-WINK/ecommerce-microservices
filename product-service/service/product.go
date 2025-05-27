@@ -43,7 +43,7 @@ func (s *ProductService) CreateProduct(ctx context.Context, req *pb.CreateProduc
 func (s *ProductService) GetProduct(ctx context.Context, req *pb.GetProductRequest) (*pb.GetProductResponse, error) {
 	// 1. 先查 Redis
 	cacheKey := fmt.Sprintf("product:detail:%d", req.ProductId)
-	val, err := RedisClient.Get(Ctx, cacheKey).Result()
+	val, err := RedisClient.Get(ctx, cacheKey).Result()
 	if err == nil && val != "" {
 		var cachedProduct pb.Product
 		if json.Unmarshal([]byte(val), &cachedProduct) == nil {
@@ -70,7 +70,7 @@ func (s *ProductService) GetProduct(ctx context.Context, req *pb.GetProductReque
 		MainImage:   product.MainImage,
 	}
 	bytes, _ := json.Marshal(pbProduct)
-	RedisClient.Set(Ctx, cacheKey, bytes, 5*time.Minute)
+	RedisClient.Set(ctx, cacheKey, bytes, 5*time.Minute)
 
 	return &pb.GetProductResponse{Product: pbProduct}, nil
 }
@@ -79,7 +79,7 @@ func (s *ProductService) ListProducts(ctx context.Context, req *pb.ListProductsR
 	// 只缓存无关键词、第一页的商品列表
 	cacheKey := "product:list:page:1:size:10"
 	if strings.TrimSpace(req.Keyword) == "" && (req.Page == 1 || req.Page == 0) && (req.PageSize == 10 || req.PageSize == 0) {
-		val, err := RedisClient.Get(Ctx, cacheKey).Result()
+		val, err := RedisClient.Get(ctx, cacheKey).Result()
 		if err == nil && val != "" {
 			var cachedResp pb.ListProductsResponse
 			if json.Unmarshal([]byte(val), &cachedResp) == nil {
@@ -128,7 +128,7 @@ func (s *ProductService) ListProducts(ctx context.Context, req *pb.ListProductsR
 	// 写入缓存
 	if strings.TrimSpace(req.Keyword) == "" && page == 1 && pageSize == 10 {
 		bytes, _ := json.Marshal(resp)
-		RedisClient.Set(Ctx, cacheKey, bytes, 2*time.Minute)
+		RedisClient.Set(ctx, cacheKey, bytes, 2*time.Minute)
 	}
 	return resp, nil
 }

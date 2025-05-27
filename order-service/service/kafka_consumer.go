@@ -26,7 +26,9 @@ func StartKafkaConsumer(brokers []string, topic string) {
 			m, err := r.ReadMessage(ctx)
 			cancel()
 			if err != nil {
-				log.Println("Kafka 消费出错:", err)
+				if ctx.Err() != context.DeadlineExceeded {
+					log.Println("Kafka 消费出错:", err)
+				}
 				continue
 			}
 			msg := string(m.Value)

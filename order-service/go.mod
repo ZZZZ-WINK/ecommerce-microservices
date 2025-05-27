@@ -6,6 +6,7 @@ toolchain go1.24.2
 
 require (
 	common v0.0.0
+	github.com/joho/godotenv v1.5.1
 	github.com/redis/go-redis/v9 v9.8.0
 	github.com/segmentio/kafka-go v0.4.47
 	google.golang.org/grpc v1.72.0

@@ -2,21 +2,36 @@ package main
 
 import (
 	"common/middleware"
+	"fmt"
 	"log"
 	"net"
 	"order-service/model"
 	"order-service/service"
+	"os"
+	"strings"
 
 	pb "common/proto/gen/order"
 	pbProduct "common/proto/gen/product"
 
+	"github.com/joho/godotenv"
 	"google.golang.org/grpc"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
 
+func init() {
+	_ = godotenv.Load()
+}
+
 func main() {
-	dsn := "zli:123456@tcp(192.168.94.242:3306)/ecommerce?charset=utf8mb4&parseTime=True&loc=Local"
+	// 连接数据库
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
+		os.Getenv("DB_USER"),
+		os.Getenv("DB_PASSWORD"),
+		os.Getenv("DB_HOST"),
+		os.Getenv("DB_PORT"),
+		os.Getenv("DB_NAME"),
+	)
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("failed to connect database: %v", err)
@@ -27,21 +42,33 @@ func main() {
 	}
 
 	// 连接商品服务
-	productConn, err := grpc.Dial("localhost:50052", grpc.WithInsecure())
+	productAddr := os.Getenv("PRODUCT_SERVICE_ADDR")
+	productConn, err := grpc.Dial(productAddr, grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("failed to connect to product service: %v", err)
 	}
 	defer productConn.Close()
 	productClient := pbProduct.NewProductServiceClient(productConn)
 
-	service.InitRedis()
+	// 初始化 Redis
+	redisAddr := fmt.Sprintf("%s:%s",
+		os.Getenv("REDIS_HOST"),
+		os.Getenv("REDIS_PORT"),
+	)
+	service.InitRedis(redisAddr)
+
+	// 初始化 Kafka
+	kafkaBrokers := strings.Split(os.Getenv("KAFKA_BROKERS"), ",")
+	kafkaTopic := os.Getenv("KAFKA_TOPIC")
 
 	// 初始化 Kafka 生产者
-	service.InitKafkaProducer([]string{"localhost:9092"}, "order-events")
+	service.InitKafkaProducer(kafkaBrokers, kafkaTopic)
 	// 启动 Kafka 消费者
-	service.StartKafkaConsumer([]string{"localhost:9092"}, "order-events")
+	service.StartKafkaConsumer(kafkaBrokers, kafkaTopic)
 
-	lis, err := net.Listen("tcp", ":50053")
+	// 创建 gRPC 服务器
+	port := os.Getenv("GRPC_PORT")
+	lis, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
